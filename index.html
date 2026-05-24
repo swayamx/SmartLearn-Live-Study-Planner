@@ -231,6 +231,194 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
 
 @media(max-width:960px){.stats-grid{grid-template-columns:repeat(2,1fr);}.dash-grid{grid-template-columns:1fr 1fr;}.span2{grid-column:span 1;}}
 @media(max-width:600px){.stats-grid{grid-template-columns:repeat(2,1fr);}.dash-grid{grid-template-columns:1fr;}.nav-tabs{display:none;}.tab-content{padding:1rem;}}
+
+/* ===== Enhanced Mobile Responsiveness ===== */
+@media (max-width: 768px){
+  nav{
+    padding:0.8rem 1rem;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .nav-logo{
+    flex:1;
+    min-width:0;
+  }
+  .nav-right{
+    width:100%;
+    justify-content:space-between;
+  }
+  .user-name-input{
+    width:120px;
+  }
+  .tab-content{
+    padding:0.9rem;
+  }
+  .stats-grid,
+  .dash-grid,
+  #tab-setup > div,
+  #tab-pomodoro > div,
+  #tab-group > div{
+    grid-template-columns:1fr !important;
+  }
+  .span2{
+    grid-column:span 1 !important;
+  }
+  .card{
+    padding:1rem;
+    overflow-x:auto;
+  }
+  .reward-grid{
+    grid-template-columns:repeat(2,1fr);
+  }
+  .pomo-timer-big{
+    font-size:2.3rem;
+  }
+  .modal{
+    width:92%;
+    min-width:auto;
+    padding:1.2rem;
+  }
+  .plan-table{
+    min-width:700px;
+  }
+  .week-chart{
+    height:90px;
+  }
+  .chat-bubble-me,
+  .chat-bubble-other{
+    max-width:85%;
+  }
+}
+
+@media (max-width: 480px){
+  body{
+    font-size:14px;
+  }
+  .stats-grid{
+    grid-template-columns:1fr 1fr !important;
+    gap:0.7rem;
+  }
+  .stat-card{
+    padding:0.9rem;
+  }
+  .stat-value{
+    font-size:1.4rem;
+  }
+  .reward-grid{
+    grid-template-columns:1fr;
+  }
+  .nav-logo-icon{
+    width:34px;
+    height:34px;
+  }
+  .logo-text span{
+    font-size:1rem;
+  }
+  .pomo-timer-big{
+    font-size:2rem;
+  }
+}
+
+
+/* ===== Mobile Sidebar ===== */
+.mobile-menu-btn{
+  display:none;
+  border:none;
+  background:rgba(255,255,255,0.35);
+  border:1px solid rgba(255,255,255,0.45);
+  width:42px;
+  height:42px;
+  border-radius:12px;
+  font-size:1.2rem;
+  cursor:pointer;
+  color:var(--text);
+  backdrop-filter:blur(12px);
+}
+
+.mobile-sidebar{
+  position:fixed;
+  top:0;
+  left:-280px;
+  width:260px;
+  height:100vh;
+  background:rgba(255,255,255,0.92);
+  backdrop-filter:blur(24px);
+  z-index:9999;
+  padding:1rem;
+  transition:left 0.3s ease;
+  box-shadow:0 0 40px rgba(0,0,0,0.15);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.mobile-sidebar.active{
+  left:0;
+}
+
+.mobile-sidebar-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:1rem;
+  font-weight:700;
+  font-size:1rem;
+}
+
+.close-sidebar{
+  border:none;
+  background:transparent;
+  font-size:1.3rem;
+  cursor:pointer;
+}
+
+.mobile-nav-link{
+  width:100%;
+  text-align:left;
+  border:none;
+  background:rgba(255,255,255,0.45);
+  border:1px solid rgba(255,255,255,0.5);
+  padding:12px 14px;
+  border-radius:12px;
+  font-family:var(--font);
+  font-size:0.9rem;
+  font-weight:600;
+  cursor:pointer;
+  transition:all 0.2s;
+}
+
+.mobile-nav-link:hover{
+  background:rgba(79,124,255,0.15);
+  color:var(--accent);
+}
+
+.mobile-sidebar-overlay{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,0.3);
+  z-index:9998;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s ease;
+}
+
+.mobile-sidebar-overlay.active{
+  opacity:1;
+  pointer-events:auto;
+}
+
+@media(max-width:768px){
+  .mobile-menu-btn{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .nav-tabs{
+    display:none !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -255,11 +443,28 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
     <button class="nav-tab" onclick="showTab('pomodoro')">Pomodoro</button>
     <button class="nav-tab" onclick="showTab('group')">Group Study</button>
   </div>
+  <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
   <div class="nav-right">
     <div class="streak-pill" onclick="showMilestone()">🔥 <span id="navStreak">0</span> day streak</div>
     <input class="user-name-input" id="userNameInput" value="Your Name" onfocus="this.select()" onchange="S.userName=this.value;renderAll()">
   </div>
 </nav>
+<!-- MOBILE SIDEBAR -->
+<div class="mobile-sidebar" id="mobileSidebar">
+  <div class="mobile-sidebar-header">
+    <span>📚 SmartLearn</span>
+    <button class="close-sidebar" onclick="toggleMobileMenu()">✕</button>
+  </div>
+
+  <button class="mobile-nav-link" onclick="showTab('dashboard');toggleMobileMenu()">🏠 Dashboard</button>
+  <button class="mobile-nav-link" onclick="showTab('setup');toggleMobileMenu()">⚙️ Setup</button>
+  <button class="mobile-nav-link" onclick="showTab('plan');toggleMobileMenu()">🤖 Adaptive Plan</button>
+  <button class="mobile-nav-link" onclick="showTab('pomodoro');toggleMobileMenu()">🍅 Pomodoro</button>
+  <button class="mobile-nav-link" onclick="showTab('group');toggleMobileMenu()">👥 Group Study</button>
+</div>
+
+<div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileMenu()"></div>
+
 
 <!-- ═══ DASHBOARD ═══ -->
 <div class="tab-content active" id="tab-dashboard">
@@ -1714,6 +1919,12 @@ window.addEventListener('load',()=>{
   // Live clock update for greeting
   setInterval(updateGreeting,60000);
 });
+
+function toggleMobileMenu(){
+  document.getElementById('mobileSidebar').classList.toggle('active');
+  document.getElementById('mobileSidebarOverlay').classList.toggle('active');
+}
+
 </script>
 </body>
 </html>
