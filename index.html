@@ -440,8 +440,8 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
     <button class="nav-tab active" onclick="showTab('dashboard')">Dashboard</button>
     <button class="nav-tab" onclick="showTab('setup')">Setup</button>
     <button class="nav-tab" onclick="showTab('plan')">Adaptive Plan</button>
-    <button class="nav-tab" onclick="showTab('pomodoro')">Timer</button>
-    
+    <button class="nav-tab" onclick="showTab('pomodoro')">Pomodoro</button>
+    <button class="nav-tab" onclick="showTab('group')">Group Study</button>
   </div>
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
   <div class="nav-right">
@@ -459,8 +459,8 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
   <button class="mobile-nav-link" onclick="showTab('dashboard');toggleMobileMenu()">🏠 Dashboard</button>
   <button class="mobile-nav-link" onclick="showTab('setup');toggleMobileMenu()">⚙️ Setup</button>
   <button class="mobile-nav-link" onclick="showTab('plan');toggleMobileMenu()">🤖 Adaptive Plan</button>
-  <button class="mobile-nav-link" onclick="showTab('Timer');toggleMobileMenu()">🍅 Timer</button>
-  
+  <button class="mobile-nav-link" onclick="showTab('pomodoro');toggleMobileMenu()">🍅 Pomodoro</button>
+  <button class="mobile-nav-link" onclick="showTab('group');toggleMobileMenu()">👥 Group Study</button>
 </div>
 
 <div class="mobile-sidebar-overlay" id="mobileSidebarOverlay" onclick="toggleMobileMenu()"></div>
@@ -849,7 +849,40 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
   </div>
 </div>
 
-
+<!-- ═══ GROUP STUDY ═══ -->
+<div class="tab-content" id="tab-group">
+  <div style="display:grid;grid-template-columns:2fr 1fr;gap:1rem;">
+    <div class="card">
+      <div class="card-title">👥 Group Members</div>
+      <div style="padding:11px 14px;background:rgba(79,124,255,0.09);border:1px solid rgba(79,124,255,0.22);border-radius:12px;margin-bottom:1rem;display:flex;align-items:center;justify-content:space-between;">
+        <div>
+          <div style="font-size:0.84rem;font-weight:600;">📡 Room: <span id="groupRoomName">—</span></div>
+          <div style="font-size:0.71rem;color:var(--text-muted);margin-top:2px;" id="groupRoomMeta">Set up group room below</div>
+        </div>
+        <button class="gl-btn ghost" style="font-size:0.72rem;padding:5px 11px;" onclick="copyRoomCode()">Copy Code</button>
+      </div>
+      <div class="form-row" style="display:flex;gap:8px;">
+        <input class="gl-input" id="roomNameInput" placeholder="Room name…" style="flex:1;">
+        <button class="gl-btn primary" onclick="createRoom()">Create</button>
+      </div>
+      <div id="memberListEl" style="margin-top:0.8rem;"></div>
+      <div style="display:flex;gap:8px;margin-top:8px;">
+        <input class="gl-input" id="inviteName" placeholder="Member name…" style="flex:1;" onkeydown="if(event.key==='Enter')addMember()">
+        <button class="gl-btn ghost" onclick="addMember()">+ Invite</button>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      <div class="card">
+        <div class="card-title">🏆 Leaderboard</div>
+        <div id="leaderboardEl"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 Group Stats</div>
+        <div style="text-align:center;padding:0.5rem 0;">
+          <div style="font-size:1.6rem;font-weight:700;color:var(--accent);" id="groupAvgReady">—</div>
+          <div style="font-size:0.69rem;color:var(--text-muted);">Avg Readiness</div>
+        </div>
+      </div>
     </div>
     <div class="card" style="grid-column:1/-1;">
       <div class="card-title">💬 Group Chat</div>
@@ -1067,7 +1100,7 @@ function showTab(id) {
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   const tabs=document.querySelectorAll('.nav-tab');
-  ['dashboard','setup','plan','pomodoro'].forEach((t,i)=>{if(t===id)tabs[i].classList.add('active');});
+  ['dashboard','setup','plan','pomodoro','group'].forEach((t,i)=>{if(t===id)tabs[i].classList.add('active');});
   if(id==='plan') renderPlanTab();
 }
 
