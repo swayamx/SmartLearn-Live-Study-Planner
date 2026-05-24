@@ -442,11 +442,12 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
     <button class="nav-tab" onclick="showTab('plan')">Adaptive Plan</button>
     <button class="nav-tab" onclick="showTab('pomodoro')">Timer</button>
     <button class="nav-tab" onclick="showTab('group')">Group Study</button>
+    <button class="nav-tab" onclick="showTab('timetable')">Timetable</button>
   </div>
   <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
   <div class="nav-right">
     <div class="streak-pill" onclick="showMilestone()">🔥 <span id="navStreak">0</span> day streak</div>
-    <input class="user-name-input" id="userNameInput" value="Your Name" onfocus="this.select()" onchange="S.userName=this.value;renderAll()">
+    <input class="user-name-input" id="userNameInput" value="Your Name" onfocus="this.select()" onchange="S.userName=this.value;renderAll();saveState()">
   </div>
 </nav>
 <!-- MOBILE SIDEBAR -->
@@ -460,6 +461,7 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
   <button class="mobile-nav-link" onclick="showTab('setup');toggleMobileMenu()">⚙️ Setup</button>
   <button class="mobile-nav-link" onclick="showTab('plan');toggleMobileMenu()">🤖 Adaptive Plan</button>
   <button class="mobile-nav-link" onclick="showTab('pomodoro');toggleMobileMenu()">🍅 timer</button>
+  <button class="mobile-nav-link" onclick="showTab('timetable');toggleMobileMenu()">📋 Timetable</button>
   
 </div>
 
@@ -895,6 +897,86 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
   </div>
 </div>
 
+
+<!-- ═══ TIMETABLE ═══ -->
+<div class="tab-content" id="tab-timetable">
+  <div style="margin-bottom:1.4rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+    <div>
+      <h2 style="font-size:1.35rem;font-weight:700;">📋 Weekly Timetable</h2>
+      <p style="color:var(--text-muted);font-size:0.84rem;margin-top:4px;">Plan your full week — all changes are saved automatically.</p>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="gl-btn ghost" style="font-size:0.75rem;" onclick="clearTimetable()">🗑 Clear All</button>
+      <button class="gl-btn primary" style="font-size:0.75rem;" onclick="openTTModal()">+ Add Slot</button>
+    </div>
+  </div>
+
+  <!-- Weekly grid -->
+  <div class="card" style="overflow-x:auto;">
+    <div id="ttGrid" style="min-width:640px;"></div>
+  </div>
+
+  <!-- Upcoming today -->
+  <div style="margin-top:1rem;display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+    <div class="card">
+      <div class="card-title">⏰ Today's Timetable</div>
+      <div id="ttToday"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">📊 Timetable Summary</div>
+      <div id="ttSummary"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Add Timetable Slot -->
+<div class="modal-overlay" id="ttModal">
+  <div class="modal">
+    <div class="modal-title">📋 Add Timetable Slot</div>
+    <div class="form-row">
+      <label class="gl-label">Day</label>
+      <select class="gl-input" id="ttDay">
+        <option value="0">Monday</option><option value="1">Tuesday</option>
+        <option value="2">Wednesday</option><option value="3">Thursday</option>
+        <option value="4">Friday</option><option value="5">Saturday</option>
+        <option value="6">Sunday</option>
+      </select>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0.8rem;">
+      <div>
+        <label class="gl-label">Start Time</label>
+        <input class="gl-input" type="time" id="ttStart" value="09:00">
+      </div>
+      <div>
+        <label class="gl-label">End Time</label>
+        <input class="gl-input" type="time" id="ttEnd" value="10:00">
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="gl-label">Subject / Activity</label>
+      <input class="gl-input" id="ttSubject" placeholder="e.g. Physics or Lunch Break">
+    </div>
+    <div class="form-row">
+      <label class="gl-label">Type</label>
+      <select class="gl-input" id="ttType">
+        <option value="study">📚 Study</option>
+        <option value="break">☕ Break</option>
+        <option value="exercise">🏃 Exercise</option>
+        <option value="revision">🔄 Revision</option>
+        <option value="other">📌 Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="gl-label">Notes (optional)</label>
+      <input class="gl-input" id="ttNotes" placeholder="e.g. Chapter 5, focus on integrals…">
+    </div>
+    <div style="display:flex;gap:8px;margin-top:0.5rem;">
+      <button class="gl-btn primary" style="flex:1;" onclick="saveTTSlot()">Save Slot</button>
+      <button class="gl-btn ghost" onclick="closeModal('ttModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 </div><!-- end .app -->
 
 <!-- TOAST -->
@@ -1100,7 +1182,8 @@ function showTab(id) {
   document.querySelectorAll('.nav-tab').forEach(el=>el.classList.remove('active'));
   document.getElementById('tab-'+id).classList.add('active');
   const tabs=document.querySelectorAll('.nav-tab');
-  ['dashboard','setup','plan','pomodoro','group'].forEach((t,i)=>{if(t===id)tabs[i].classList.add('active');});
+  ['dashboard','setup','plan','pomodoro','group','timetable'].forEach((t,i)=>{if(t===id)tabs[i].classList.add('active');});
+  if(id==='timetable') renderTimetableTab();
   if(id==='plan') renderPlanTab();
 }
 
@@ -1903,6 +1986,22 @@ function closeMilestone(){ document.getElementById('milestonePop').classList.rem
 // INIT
 // ═══════════════════════════════════════════════════════
 window.addEventListener('load',()=>{
+  // LOAD PERSISTED STATE FIRST
+  loadState();
+
+  // Sync UI fields from loaded state
+  if(S.userName){ document.getElementById('userNameInput').value=S.userName; document.getElementById('setupName').value=S.userName; }
+  if(S.goalName) document.getElementById('goalName').value=S.goalName;
+  if(S.goalTarget) document.getElementById('goalTarget').value=S.goalTarget;
+  document.getElementById('dailyTopicGoal').value=S.dailyTopicGoal;
+  document.getElementById('weekHoursGoal').value=S.weekHoursGoal;
+  document.getElementById('freeH').value=S.freeH;
+  document.getElementById('freeM').value=S.freeM;
+  document.getElementById('busyH').value=S.busyH;
+  document.getElementById('busyM').value=S.busyM;
+  document.getElementById('startTime').value=S.startTime;
+  document.getElementById('breakMin').value=S.breakMin;
+
   // set today's date in exam modal min
   const today=new Date().toISOString().split('T')[0];
   document.getElementById('mExamDate').min=today;
@@ -1918,11 +2017,245 @@ window.addEventListener('load',()=>{
   updateGreeting();
   // Live clock update for greeting
   setInterval(updateGreeting,60000);
+  // Save state every 30s as backup
+  setInterval(saveState, 30000);
 });
 
 function toggleMobileMenu(){
   document.getElementById('mobileSidebar').classList.toggle('active');
   document.getElementById('mobileSidebarOverlay').classList.toggle('active');
+}
+
+
+
+// ═══════════════════════════════════════════════════════
+// LOCAL STORAGE — PERSIST EVERYTHING
+// ═══════════════════════════════════════════════════════
+const LS_KEY = 'smartlearn_v3';
+const TT_KEY = 'smartlearn_tt_v3';
+
+function saveState() {
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(S));
+    localStorage.setItem(TT_KEY, JSON.stringify(TT));
+  } catch(e) { console.warn('Storage save failed:', e); }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) {
+      const saved = JSON.parse(raw);
+      // Merge saved into S (keeps any new fields from default)
+      Object.assign(S, saved);
+    }
+    const rawTT = localStorage.getItem(TT_KEY);
+    if (rawTT) {
+      const savedTT = JSON.parse(rawTT);
+      TT.slots = savedTT.slots || [];
+    }
+  } catch(e) { console.warn('Storage load failed:', e); }
+}
+
+// Auto-save on any S mutation — patch renderAll
+const _origRenderAll = renderAll;
+window.renderAll = function() {
+  _origRenderAll();
+  saveState();
+};
+
+// ═══════════════════════════════════════════════════════
+// TIMETABLE STATE
+// ═══════════════════════════════════════════════════════
+const TT = {
+  slots: [], // {id, day(0-6), start, end, subject, type, notes}
+};
+
+const TT_COLORS = {
+  study:    { bg: 'rgba(79,124,255,0.18)',    border: 'rgba(79,124,255,0.4)',    dot: '#4f7cff',  label: '📚 Study'    },
+  break:    { bg: 'rgba(52,211,153,0.15)',    border: 'rgba(52,211,153,0.4)',    dot: '#34d399',  label: '☕ Break'    },
+  exercise: { bg: 'rgba(251,146,60,0.15)',    border: 'rgba(251,146,60,0.4)',    dot: '#fb923c',  label: '🏃 Exercise' },
+  revision: { bg: 'rgba(167,139,250,0.18)',   border: 'rgba(167,139,250,0.45)', dot: '#a78bfa',  label: '🔄 Revision' },
+  other:    { bg: 'rgba(248,113,113,0.13)',   border: 'rgba(248,113,113,0.35)', dot: '#f87171',  label: '📌 Other'    },
+};
+
+const TT_DAYS = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+
+function openTTModal() {
+  // pre-select today
+  document.getElementById('ttDay').value = todayDayIndex();
+  openModal('ttModal');
+}
+
+function saveTTSlot() {
+  const day   = parseInt(document.getElementById('ttDay').value);
+  const start = document.getElementById('ttStart').value;
+  const end   = document.getElementById('ttEnd').value;
+  const subj  = document.getElementById('ttSubject').value.trim();
+  const type  = document.getElementById('ttType').value;
+  const notes = document.getElementById('ttNotes').value.trim();
+  if (!subj) { showToast('⚠️ Enter a subject or activity'); return; }
+  if (!start || !end || start >= end) { showToast('⚠️ End time must be after start time'); return; }
+  TT.slots.push({
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    day, start, end, subject: subj, type, notes
+  });
+  closeModal('ttModal');
+  saveState();
+  renderTimetableTab();
+  showToast('📋 Slot added!');
+}
+
+function removeTTSlot(id) {
+  TT.slots = TT.slots.filter(s => s.id !== id);
+  saveState();
+  renderTimetableTab();
+  showToast('🗑 Slot removed');
+}
+
+function clearTimetable() {
+  if (!TT.slots.length) { showToast('⚠️ Timetable is already empty'); return; }
+  TT.slots = [];
+  saveState();
+  renderTimetableTab();
+  showToast('🗑 Timetable cleared');
+}
+
+function minutesFromTime(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function formatDuration(start, end) {
+  const diff = minutesFromTime(end) - minutesFromTime(start);
+  const h = Math.floor(diff / 60), m = diff % 60;
+  return h > 0 ? (m > 0 ? `${h}h ${m}m` : `${h}h`) : `${m}m`;
+}
+
+function renderTimetableTab() {
+  renderTTGrid();
+  renderTTToday();
+  renderTTSummary();
+}
+
+function renderTTGrid() {
+  const el = document.getElementById('ttGrid');
+  if (!el) return;
+
+  const DAYS = TT_DAYS;
+  const dayWidthPct = 100 / 7;
+
+  // Build column headers
+  const today = todayDayIndex();
+  let headerHTML = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:6px;">`;
+  DAYS.forEach((d, i) => {
+    const isToday = i === today;
+    headerHTML += `<div style="text-align:center;padding:6px 2px;border-radius:8px;font-size:0.72rem;font-weight:700;
+      background:${isToday ? 'rgba(79,124,255,0.18)' : 'rgba(255,255,255,0.2)'};
+      color:${isToday ? 'var(--accent)' : 'var(--text-muted)'};
+      border:1px solid ${isToday ? 'rgba(79,124,255,0.4)' : 'rgba(255,255,255,0.3)'};">
+      ${d.slice(0,3).toUpperCase()}${isToday ? '<div style="font-size:0.55rem;margin-top:1px;">TODAY</div>' : ''}
+    </div>`;
+  });
+  headerHTML += '</div>';
+
+  // Build day columns
+  let colsHTML = `<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;align-items:start;">`;
+  DAYS.forEach((d, i) => {
+    const daySlots = TT.slots.filter(s => s.day === i).sort((a, b) => a.start.localeCompare(b.start));
+    colsHTML += `<div style="min-height:120px;">`;
+    if (!daySlots.length) {
+      colsHTML += `<div style="text-align:center;padding:16px 4px;font-size:0.62rem;color:var(--text-muted);background:rgba(255,255,255,0.1);border-radius:8px;border:1px dashed rgba(255,255,255,0.25);">—</div>`;
+    } else {
+      daySlots.forEach(s => {
+        const c = TT_COLORS[s.type] || TT_COLORS.other;
+        const dur = formatDuration(s.start, s.end);
+        colsHTML += `<div style="background:${c.bg};border:1px solid ${c.border};border-radius:8px;padding:6px 7px;margin-bottom:4px;position:relative;cursor:default;" title="${s.subject}${s.notes ? ' — ' + s.notes : ''}">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:2px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:${c.dot};flex-shrink:0;"></div>
+            <span style="font-size:0.65rem;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;">${s.subject}</span>
+          </div>
+          <div style="font-size:0.58rem;color:var(--text-muted);">${s.start}–${s.end} · ${dur}</div>
+          <button onclick="removeTTSlot('${s.id}')" style="position:absolute;top:3px;right:3px;background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.6rem;opacity:0.5;line-height:1;" title="Remove">✕</button>
+        </div>`;
+      });
+    }
+    colsHTML += '</div>';
+  });
+  colsHTML += '</div>';
+
+  el.innerHTML = headerHTML + colsHTML;
+}
+
+function renderTTToday() {
+  const el = document.getElementById('ttToday');
+  if (!el) return;
+  const today = todayDayIndex();
+  const todaySlots = TT.slots.filter(s => s.day === today).sort((a,b) => a.start.localeCompare(b.start));
+  if (!todaySlots.length) {
+    el.innerHTML = `<div style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:1rem 0;">No slots for today — add one!</div>`;
+    return;
+  }
+  const now = new Date();
+  const nowMins = now.getHours() * 60 + now.getMinutes();
+  el.innerHTML = todaySlots.map(s => {
+    const c = TT_COLORS[s.type] || TT_COLORS.other;
+    const startMins = minutesFromTime(s.start);
+    const endMins = minutesFromTime(s.end);
+    const isPast = nowMins > endMins;
+    const isNow = nowMins >= startMins && nowMins <= endMins;
+    const statusStyle = isNow ? 'color:#059669;font-weight:700;' : isPast ? 'color:var(--text-muted);text-decoration:line-through;opacity:0.6;' : '';
+    const badge = isNow ? '<span style="background:rgba(52,211,153,0.2);color:#059669;border-radius:4px;padding:1px 6px;font-size:0.6rem;font-weight:700;">NOW</span>' : '';
+    return `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,0.15);">
+      <div style="width:8px;height:8px;border-radius:50%;background:${c.dot};margin-top:5px;flex-shrink:0;"></div>
+      <div style="flex:1;${statusStyle}">
+        <div style="font-size:0.8rem;font-weight:600;">${s.subject} ${badge}</div>
+        <div style="font-size:0.68rem;color:var(--text-muted);">${s.start} – ${s.end} · ${formatDuration(s.start,s.end)}${s.notes ? ' · ' + s.notes : ''}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderTTSummary() {
+  const el = document.getElementById('ttSummary');
+  if (!el) return;
+  if (!TT.slots.length) {
+    el.innerHTML = `<div style="color:var(--text-muted);font-size:0.8rem;text-align:center;padding:1rem 0;">Add slots to see summary.</div>`;
+    return;
+  }
+  const totalMins = TT.slots.reduce((a, s) => a + minutesFromTime(s.end) - minutesFromTime(s.start), 0);
+  const byType = {};
+  TT.slots.forEach(s => { byType[s.type] = (byType[s.type] || 0) + minutesFromTime(s.end) - minutesFromTime(s.start); });
+  const studyMins = byType.study || 0;
+  const slotsPerDay = {};
+  TT.slots.forEach(s => { slotsPerDay[s.day] = (slotsPerDay[s.day] || 0) + 1; });
+  const busyDays = Object.keys(slotsPerDay).length;
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.2);border-radius:10px;border:1px solid rgba(255,255,255,0.3);">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--accent);">${Math.floor(totalMins/60)}h${totalMins%60>0?' '+totalMins%60+'m':''}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">Total Planned</div>
+      </div>
+      <div style="text-align:center;padding:10px;background:rgba(255,255,255,0.2);border-radius:10px;border:1px solid rgba(255,255,255,0.3);">
+        <div style="font-size:1.4rem;font-weight:700;color:var(--accent3);">${Math.floor(studyMins/60)}h${studyMins%60>0?' '+studyMins%60+'m':''}</div>
+        <div style="font-size:0.65rem;color:var(--text-muted);">Study Time</div>
+      </div>
+    </div>
+    <div style="font-size:0.76rem;margin-bottom:6px;"><b>${TT.slots.length}</b> slots across <b>${busyDays}</b> day${busyDays!==1?'s':''}</div>
+    ${Object.entries(byType).map(([type, mins]) => {
+      const c = TT_COLORS[type] || TT_COLORS.other;
+      const pct = Math.round(mins / totalMins * 100);
+      return `<div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:2px;">
+          <span>${c.label}</span><span style="color:var(--text-muted);">${Math.floor(mins/60)}h${mins%60>0?' '+mins%60+'m':''} · ${pct}%</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,0.2);border-radius:99px;overflow:hidden;">
+          <div style="height:100%;width:${pct}%;background:${c.dot};border-radius:99px;"></div>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
 }
 
 </script>
