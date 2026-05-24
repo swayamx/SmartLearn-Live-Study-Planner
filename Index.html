@@ -548,6 +548,12 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
               stroke-linecap="round" stroke-dasharray="427" stroke-dashoffset="0"/>
             <defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#fb923c"/>
+            </linearGradient>
+            <linearGradient id="pgs" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#34d399"/><stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+            <linearGradient id="pgl" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#4f7cff"/>
             </linearGradient></defs>
           </svg>
           <div class="ring-overlay">
@@ -569,42 +575,46 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
       </div>
     </div>
     <div class="card">
-      <div class="card-title">⚙️ Settings</div>
+      <div class="card-title">⚙️ Timer Settings</div>
+      <!-- Quick Presets -->
       <div class="form-row">
-        <label class="gl-label">Focus (min)</label>
+        <label class="gl-label">⚡ Quick Focus Presets</label>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:4px;">
+          <button class="gl-btn ghost" style="font-size:0.72rem;padding:6px 4px;" onclick="setPomoPreset(25,5,15)">🍅 Classic<br><span style="font-weight:400;font-size:0.65rem;">25/5/15</span></button>
+          <button class="gl-btn ghost" style="font-size:0.72rem;padding:6px 4px;" onclick="setPomoPreset(60,10,20)">⏱ 1 Hour<br><span style="font-weight:400;font-size:0.65rem;">60/10/20</span></button>
+          <button class="gl-btn ghost" style="font-size:0.72rem;padding:6px 4px;" onclick="setPomoPreset(120,15,30)">🔥 2 Hours<br><span style="font-weight:400;font-size:0.65rem;">120/15/30</span></button>
+        </div>
+        <button class="gl-btn ghost" style="font-size:0.72rem;padding:6px;width:100%;" onclick="setPomoPreset(180,20,45)">💪 3 Hour Deep Work — 180/20/45</button>
+      </div>
+      <div class="form-row">
+        <label class="gl-label">Focus Duration (min): <span id="pomoFocusVal" style="color:var(--accent);font-weight:700;">25</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" min="10" max="60" value="25" id="pomoFocusDur"
-            oninput="P.focusDur=+this.value;document.getElementById('pomoFocusVal').textContent=this.value+' min';if(!P.running&&P.phase==='focus'){P.seconds=P.focusDur*60;P.total=P.seconds;pomoUpdateUI();}"
+          <input type="range" min="10" max="180" value="25" id="pomoFocusDur"
             style="flex:1;accent-color:var(--accent);">
-          <span style="font-size:0.8rem;font-weight:600;min-width:38px;" id="pomoFocusVal">25 min</span>
         </div>
       </div>
       <div class="form-row">
-        <label class="gl-label">Short Break (min)</label>
+        <label class="gl-label">Short Break (min): <span id="pomoShortVal" style="color:var(--accent3);font-weight:700;">5</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" min="3" max="15" value="5" id="pomoShortDur"
-            oninput="P.shortDur=+this.value;document.getElementById('pomoShortVal').textContent=this.value+' min';"
+          <input type="range" min="3" max="30" value="5" id="pomoShortDur"
             style="flex:1;accent-color:var(--accent3);">
-          <span style="font-size:0.8rem;font-weight:600;min-width:38px;" id="pomoShortVal">5 min</span>
         </div>
       </div>
       <div class="form-row">
-        <label class="gl-label">Long Break (min)</label>
+        <label class="gl-label">Long Break (min): <span id="pomoLongVal" style="color:var(--accent2);font-weight:700;">15</span></label>
         <div style="display:flex;align-items:center;gap:8px;">
-          <input type="range" min="10" max="30" value="15" id="pomoLongDur"
-            oninput="P.longDur=+this.value;document.getElementById('pomoLongVal').textContent=this.value+' min';"
+          <input type="range" min="10" max="60" value="15" id="pomoLongDur"
             style="flex:1;accent-color:var(--accent2);">
-          <span style="font-size:0.8rem;font-weight:600;min-width:38px;" id="pomoLongVal">15 min</span>
         </div>
       </div>
       <div class="form-row">
         <label class="gl-label">Sessions before long break</label>
-        <select class="gl-input" onchange="P.sessionsPerLong=+this.value;">
+        <select class="gl-input" id="pomoSessionsPerLong">
           <option value="2">2</option><option value="4" selected>4</option><option value="6">6</option>
         </select>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;">
-        <span style="font-size:0.8rem;font-weight:500;">Sound alerts</span>
+        <span style="font-size:0.8rem;font-weight:500;">🔔 Sound alerts</span>
         <label class="switch"><input type="checkbox" id="pomoSound" checked><span class="sw-slider"></span></label>
       </div>
     </div>
@@ -620,7 +630,9 @@ input:checked + .sw-slider:before{transform:translateX(17px);}
           <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Focus Time</div>
         </div>
         <div style="text-align:center;padding:13px;background:rgba(255,255,255,0.2);border-radius:12px;border:1px solid rgba(255,255,255,0.3);">
-          <div style="font-size:1.7rem;font-weight:700;color:var(--accent3);" id="pomoStatGoal">4</div>
+          <input type="number" min="1" max="20" value="4" id="pomoStatGoal"
+            style="font-size:1.5rem;font-weight:700;color:var(--accent3);background:transparent;border:none;outline:none;width:60px;text-align:center;font-family:var(--font);"
+            oninput="pomoUpdateUI()">
           <div style="font-size:0.68rem;color:var(--text-muted);margin-top:2px;">Goal Today</div>
         </div>
         <div style="text-align:center;padding:13px;background:rgba(255,255,255,0.2);border-radius:12px;border:1px solid rgba(255,255,255,0.3);">
@@ -811,6 +823,69 @@ const P = {
   currentSubject: '',
   sessionsThisRound: 0,
 };
+
+// ── Web Audio beep ──
+function playBeep(freq=880, dur=0.4, type='sine') {
+  try {
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = type;
+    gain.gain.setValueAtTime(0.35, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+function playDone()  { playBeep(660,0.15); setTimeout(()=>playBeep(880,0.3),180); }
+function playBreak() { playBeep(440,0.2); setTimeout(()=>playBeep(330,0.35),200); }
+function playTick()  { /* silent tick by default */ }
+
+// ── Bind sliders live ──
+function bindPomoSliders() {
+  const fSlider = document.getElementById('pomoFocusDur');
+  const sSlider = document.getElementById('pomoShortDur');
+  const lSlider = document.getElementById('pomoLongDur');
+  const spSel   = document.getElementById('pomoSessionsPerLong');
+  if (fSlider) fSlider.addEventListener('input', () => {
+    P.focusDur = +fSlider.value;
+    document.getElementById('pomoFocusVal').textContent = fSlider.value;
+    if (!P.running && P.phase === 'focus') { P.seconds = P.focusDur*60; P.total = P.seconds; pomoUpdateUI(); }
+  });
+  if (sSlider) sSlider.addEventListener('input', () => {
+    P.shortDur = +sSlider.value;
+    document.getElementById('pomoShortVal').textContent = sSlider.value;
+    if (!P.running && P.phase === 'short') { P.seconds = P.shortDur*60; P.total = P.seconds; pomoUpdateUI(); }
+  });
+  if (lSlider) lSlider.addEventListener('input', () => {
+    P.longDur = +lSlider.value;
+    document.getElementById('pomoLongVal').textContent = lSlider.value;
+    if (!P.running && P.phase === 'long') { P.seconds = P.longDur*60; P.total = P.seconds; pomoUpdateUI(); }
+  });
+  if (spSel) spSel.addEventListener('change', () => { P.sessionsPerLong = +spSel.value; pomoUpdateUI(); });
+}
+
+// ── Quick presets ──
+function setPomoPreset(focus, shortB, longB) {
+  if (P.running) { showToast('⚠️ Stop the timer first'); return; }
+  P.focusDur = focus; P.shortDur = shortB; P.longDur = longB;
+  P.phase = 'focus'; P.seconds = focus*60; P.total = focus*60;
+  // sync sliders
+  const fSlider = document.getElementById('pomoFocusDur');
+  const sSlider = document.getElementById('pomoShortDur');
+  const lSlider = document.getElementById('pomoLongDur');
+  if (fSlider) { fSlider.max = Math.max(180, focus); fSlider.value = focus; }
+  if (sSlider) { sSlider.max = Math.max(30, shortB); sSlider.value = shortB; }
+  if (lSlider) { lSlider.max = Math.max(60, longB);  lSlider.value = longB; }
+  document.getElementById('pomoFocusVal').textContent = focus;
+  document.getElementById('pomoShortVal').textContent = shortB;
+  document.getElementById('pomoLongVal').textContent  = longB;
+  document.getElementById('pomoToggleBtn').textContent = '▶ Start';
+  pomoUpdateUI();
+  showToast(`⏱ Preset set: ${focus}m focus / ${shortB}m short / ${longB}m long`);
+}
 
 // ═══════════════════════════════════════════════════════
 // TAB NAVIGATION
@@ -1157,16 +1232,23 @@ function renderSubjectTagsSetup(){
 }
 
 function renderSubjectWeightSliders(){
-  const el=document.getElementById('subjWeightSliders');
-  if(!S.subjects.length){el.innerHTML=`<div style="font-size:0.78rem;color:var(--text-muted);">Add subjects above.</div>`;return;}
-  el.innerHTML=S.subjects.map((s,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+  const el = document.getElementById('subjWeightSliders');
+  if (!S.subjects.length) { el.innerHTML = `<div style="font-size:0.78rem;color:var(--text-muted);">Add subjects above.</div>`; return; }
+  el.innerHTML = S.subjects.map((s, i) => `
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
       <span style="font-size:0.78rem;min-width:90px;">${s.emoji} ${s.name}</span>
       <input type="range" min="1" max="7" value="${s.weight||3}" id="wt_${i}"
-        oninput="S.subjects[${i}].weight=+this.value;document.getElementById('wtv_${i}').textContent=this.value+' days/wk';"
         style="flex:1;accent-color:${DOT_COLORS[i%DOT_COLORS.length]};">
-      <span style="font-size:0.75rem;font-weight:600;min-width:60px;" id="wtv_${i}">${s.weight||3} days/wk</span>
+      <span style="font-size:0.75rem;font-weight:600;min-width:64px;color:${DOT_COLORS[i%DOT_COLORS.length]};" id="wtv_${i}">${s.weight||3} days/wk</span>
     </div>`).join('');
+  // Attach events after DOM insertion
+  S.subjects.forEach((s, i) => {
+    const slider = document.getElementById('wt_' + i);
+    if (slider) slider.addEventListener('input', () => {
+      S.subjects[i].weight = +slider.value;
+      document.getElementById('wtv_' + i).textContent = slider.value + ' days/wk';
+    });
+  });
 }
 
 function addSubject(){
@@ -1374,79 +1456,122 @@ function regenPlan(){
 // POMODORO
 // ═══════════════════════════════════════════════════════
 function pomoUpdateUI(){
-  const m=Math.floor(P.seconds/60), s=P.seconds%60;
-  document.getElementById('pomoDisplay').textContent=`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
-  const ring=document.getElementById('pomoRing');
-  const offset=427*(1-P.seconds/P.total);
-  ring.style.strokeDashoffset=427-offset;
-  const phases={focus:'🍅 Focus',short:'☕ Short Break',long:'🌿 Long Break'};
-  document.getElementById('pomoPhaseLabel').textContent=phases[P.phase];
-  document.getElementById('pomoStatDone').textContent=P.doneToday;
-  document.getElementById('pomoStatTime').textContent=(P.doneToday*P.focusDur)+'m';
-  const goal=parseInt(document.getElementById('pomoStatGoal').textContent)||4;
-  document.getElementById('pomoStatRate').textContent=goal>0?Math.round(P.doneToday/goal*100)+'%':'0%';
-  // dots
-  const dots=document.getElementById('pomoDots');
-  const perRound=P.sessionsPerLong;
-  dots.innerHTML=Array.from({length:perRound},(_,i)=>`<div class="pomo-dot ${i<P.sessionsThisRound?'done':''}"></div>`).join('');
-  document.getElementById('pomoSessionInfo').textContent=`Session ${P.sessionsThisRound+1} of ${perRound} · Next: ${P.sessionsThisRound+1>=perRound?P.longDur+' min long break':P.shortDur+' min short break'}`;
+  const m = Math.floor(P.seconds/60), s = P.seconds%60;
+  const timeStr = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  document.getElementById('pomoDisplay').textContent = timeStr;
+  // Update page title when running
+  if (P.running) document.title = `${timeStr} — SmartLearn`;
+  else document.title = 'SmartLearn — Live Study Planner';
+  // Ring: full circle = 427 circumference. strokeDashoffset 0 = full ring, 427 = empty
+  const ring = document.getElementById('pomoRing');
+  const progress = P.total > 0 ? P.seconds / P.total : 1;
+  ring.style.strokeDashoffset = String(427 * (1 - progress));
+  // Phase colours
+  const phaseColors = {
+    focus: 'url(#pg)',
+    short: 'url(#pgs)',
+    long:  'url(#pgl)',
+  };
+  ring.setAttribute('stroke', phaseColors[P.phase] || 'url(#pg)');
+  const phases = {focus:'🍅 Focus', short:'☕ Short Break', long:'🌿 Long Break'};
+  document.getElementById('pomoPhaseLabel').textContent = phases[P.phase];
+  document.getElementById('pomoStatDone').textContent  = P.doneToday;
+  document.getElementById('pomoStatTime').textContent  = (P.doneToday * P.focusDur) + 'm';
+  const goalEl = document.getElementById('pomoStatGoal');
+  const goal   = parseInt(goalEl.textContent) || 4;
+  document.getElementById('pomoStatRate').textContent  = goal > 0 ? Math.round(P.doneToday/goal*100)+'%' : '0%';
+  // Dots
+  const dots = document.getElementById('pomoDots');
+  const perRound = P.sessionsPerLong;
+  dots.innerHTML = Array.from({length: perRound}, (_,i) =>
+    `<div class="pomo-dot ${i < P.sessionsThisRound ? 'done' : ''}"></div>`
+  ).join('');
+  const nextBreak = P.sessionsThisRound+1 >= perRound
+    ? P.longDur + 'm long break'
+    : P.shortDur + 'm short break';
+  document.getElementById('pomoSessionInfo').textContent =
+    `Session ${P.sessionsThisRound+1} of ${perRound} · Next: ${nextBreak}`;
 }
 
 function pomoToggle(){
-  if(P.running){
-    clearInterval(P.interval); P.running=false;
-    document.getElementById('pomoToggleBtn').textContent='▶ Resume';
+  if (P.running) {
+    clearInterval(P.interval);
+    P.interval = null;
+    P.running = false;
+    document.getElementById('pomoToggleBtn').innerHTML = '▶ Resume';
+    document.title = 'SmartLearn — Live Study Planner';
   } else {
-    P.running=true;
-    document.getElementById('pomoToggleBtn').textContent='⏸ Pause';
-    P.interval=setInterval(()=>{
+    P.running = true;
+    document.getElementById('pomoToggleBtn').innerHTML = '⏸ Pause';
+    P.interval = setInterval(() => {
+      if (!P.running) return;
       P.seconds--;
-      if(P.seconds<=0){
-        clearInterval(P.interval); P.running=false;
-        if(P.phase==='focus'){
-          P.doneToday++; P.sessionsThisRound++;
-          if(S.subjects.length&&P.currentSubject){
-            // add study time to today
-            S.weekSessions[todayDayIndex()]+=(P.focusDur/60);
-            checkStreakUpdate();
-          }
-          if(P.sessionsThisRound>=P.sessionsPerLong){
-            P.phase='long'; P.total=P.longDur*60; P.sessionsThisRound=0;
-            showToast('🌿 Long break time! Well done!');
+      if (P.seconds <= 0) {
+        clearInterval(P.interval);
+        P.interval = null;
+        P.running = false;
+        document.getElementById('pomoToggleBtn').innerHTML = '▶ Start';
+        const soundOn = document.getElementById('pomoSound').checked;
+        if (P.phase === 'focus') {
+          P.doneToday++;
+          P.sessionsThisRound++;
+          S.weekSessions[todayDayIndex()] += (P.focusDur / 60);
+          checkStreakUpdate();
+          if (soundOn) playDone();
+          if (P.sessionsThisRound >= P.sessionsPerLong) {
+            P.phase = 'long';
+            P.total = P.longDur * 60;
+            P.sessionsThisRound = 0;
+            showToast('🌿 Long break time! Great work, take a real rest!');
           } else {
-            P.phase='short'; P.total=P.shortDur*60;
+            P.phase = 'short';
+            P.total = P.shortDur * 60;
             showToast('☕ Short break — you earned it!');
           }
         } else {
-          P.phase='focus'; P.total=P.focusDur*60;
-          showToast('🍅 Break over! Back to focus!');
+          if (soundOn) playBreak();
+          P.phase = 'focus';
+          P.total = P.focusDur * 60;
+          showToast('🍅 Break over! Time to focus!');
         }
-        P.seconds=P.total;
-        document.getElementById('pomoToggleBtn').textContent='▶ Start';
+        P.seconds = P.total;
         pomoUpdateUI();
         renderAll();
         return;
       }
       pomoUpdateUI();
-    },1000);
+    }, 1000);
   }
 }
 
 function pomoReset(){
-  clearInterval(P.interval); P.running=false;
-  P.phase='focus'; P.seconds=P.focusDur*60; P.total=P.focusDur*60;
-  document.getElementById('pomoToggleBtn').textContent='▶ Start';
+  clearInterval(P.interval);
+  P.interval = null;
+  P.running = false;
+  P.phase = 'focus';
+  P.seconds = P.focusDur * 60;
+  P.total   = P.focusDur * 60;
+  P.sessionsThisRound = 0;
+  document.getElementById('pomoToggleBtn').innerHTML = '▶ Start';
+  document.title = 'SmartLearn — Live Study Planner';
   pomoUpdateUI();
+  showToast('↺ Timer reset');
 }
 
 function pomoSkip(){
-  clearInterval(P.interval); P.running=false;
-  P.phase=P.phase==='focus'?'short':'focus';
-  P.total=P.phase==='focus'?P.focusDur*60:P.shortDur*60;
-  P.seconds=P.total;
-  document.getElementById('pomoToggleBtn').textContent='▶ Start';
+  clearInterval(P.interval);
+  P.interval = null;
+  P.running = false;
+  if (P.phase === 'focus') {
+    P.phase = P.sessionsThisRound + 1 >= P.sessionsPerLong ? 'long' : 'short';
+  } else {
+    P.phase = 'focus';
+  }
+  P.total   = P.phase === 'focus' ? P.focusDur*60 : P.phase === 'short' ? P.shortDur*60 : P.longDur*60;
+  P.seconds = P.total;
+  document.getElementById('pomoToggleBtn').innerHTML = '▶ Start';
   pomoUpdateUI();
-  showToast('⏭ Skipped phase');
+  showToast('⏭ Phase skipped');
 }
 
 function renderPomoSubjectPicker(){
@@ -1582,6 +1707,8 @@ window.addEventListener('load',()=>{
   // initial render
   renderAll();
   pomoUpdateUI();
+  // Bind pomo sliders (must come after DOM ready)
+  bindPomoSliders();
   // Greeting time
   updateGreeting();
   // Live clock update for greeting
